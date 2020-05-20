@@ -16,12 +16,12 @@ fsd.create( config )
 
 # Config options ( Table )
 
-• type - Formats to be selected by the user ( table )<br>
-• new_folder - The folder into which the file will be imported ( string )<br>
-• new_file - New name of the imported file ( string )<br>
-• new_type - New extension for the imported file ( string )<br>
-• path - Default path ( string )<br>
-• listener - Listener ( function )<br>
+• type - Formats to be selected by the user ( Table )<br>
+• new_folder - The folder into which the file will be imported ( String )<br>
+• new_file - New name of the imported file ( String )<br>
+• new_type - New extension for the imported file ( String )<br>
+• path - Default path ( String )<br>
+• listener - Listener ( Function )<br>
 
 # Example 
 
