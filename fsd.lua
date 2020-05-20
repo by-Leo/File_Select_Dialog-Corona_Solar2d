@@ -11,21 +11,22 @@ local scroll_height = 0
 local path
 local group_self
 local file_listener
+local image_visible = false
 local files = {}
 local folders = {}
 local files_and_folders_group = display.newGroup()
 
 display.setDefault( "background", 0.15, 0.15, 0.2 )
-display.setDefault( "magTextureFilter", "nearest")
+widget.setTheme( "widget_theme_android_holo_dark" )
 
 local seed = (socket.gettime()*10000)%10^9
 math.randomseed(seed)
 
 local config = {
   x = display.contentCenterX,
-  y = display.contentCenterY,
+  y = display.contentCenterY + 50,
   width = display.contentWidth,
-  height = display.contentHeight,
+  height = display.contentHeight - 100,
   hideBackground = true,
   hideScrollBar = true,
   horizontalScrollDisabled = true,
@@ -35,6 +36,21 @@ local config = {
 
 local scroll_view = widget.newScrollView( config )
 
+local function onSwitchPress( event )
+  image_visible = event.target.isOn
+end
+
+local textBut = display.newText( 'Показывать иллюстрации:', 250, 50, font, 30 )
+
+local but = widget.newSwitch {
+  width = 75, height = 75,
+  x = 500, y = 50,
+  style = "checkbox",
+  onPress = onSwitchPress,
+}
+
+display.setDefault( "magTextureFilter", "nearest")
+
 local function read_file( file_config )
   local file = io.open( path, 'rb' )
 
@@ -42,7 +58,7 @@ local function read_file( file_config )
     local data = file:read('*a')
     io.close( file )
 
-    local path 
+    local path
     local path_file
 
     if file_config.new_folder then
@@ -145,29 +161,31 @@ local function set_interface( file_config )
     last_position_y = last_position_y + 150
   end
   for i = 1, #files do
+    local picture
     local data
     local image_path = path .. '/' .. files[i]
 
-    local image_file = io.open( image_path, 'rb' )
+    if image_visible then
 
-    if image_file then
-      data = image_file:read('*a')
-      io.close(image_file)
+      local image_file = io.open( image_path, 'rb' )
+
+      if image_file then
+        data = image_file:read('*a')
+        io.close(image_file)
+      end
+
+      local random_name = tostring(math.random(111111111, 999999999)) .. '.jpg'
+      local image_file = io.open( system.pathForFile( random_name, system.TemporaryDirectory ), 'wb' )
+
+      if image_file then
+        image_file:write(data)
+        io.close(image_file)
+      end
+
+      pcall(function()
+        picture = display.newImage( files_and_folders_group, random_name, system.TemporaryDirectory )
+      end)
     end
-
-    local random_name = tostring(math.random(111111111, 999999999)) .. '.jpg'
-    local image_file = io.open( system.pathForFile( random_name, system.TemporaryDirectory ), 'wb' )
-
-    if image_file then
-      image_file:write(data)
-      io.close(image_file)
-    end
-
-    local picture
-
-    pcall(function()
-      picture = display.newImage( files_and_folders_group, random_name, system.TemporaryDirectory )
-    end)
 
     if picture then
       local image_formula = picture.width / 120
