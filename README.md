@@ -11,7 +11,7 @@ local fsd = require 'fsd'
 # Using
 
 ```lua
-fsd.create( config )
+fsd.create( config, group )
 ```
 
 # Config options ( Table )
@@ -23,10 +23,20 @@ fsd.create( config )
 • path - Default path ( String )<br>
 • listener - Listener ( Function )<br>
 
+# Group 
+
+By hiding a group in order to correctly display the interface, all objects on the scene should be in this group, it is recommended to use the scene group (sceneGroup) and not access the module through main.lua (Optional parameter)
+
 # Example 
 
 ```lua
 local fsd = require 'fsd'
+
+local group = display.newGroup()
+
+local object1 = display.newImage( group, ... )
+local object2 = display.newRect( group, ... )
+local object3 = display.newPolygon( group, ... )
 
 local config = {
   type = {
@@ -47,5 +57,5 @@ local config = {
   end
 }
 
-fsd.create( config )
+fsd.create( config, group )
 ```
