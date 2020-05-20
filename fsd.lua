@@ -42,7 +42,7 @@ local function read_file( file_config )
     local data = file:read('*a')
     io.close( file )
 
-    local path
+    local path 
     local path_file
 
     if file_config.new_folder then
