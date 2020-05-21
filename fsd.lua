@@ -14,7 +14,8 @@ local file_listener
 local image_visible = false
 local files = {}
 local folders = {}
-local files_and_folders_group = display.newGroup()
+local files_and_folders_group
+local interface_group
 
 display.setDefault( "background", 0.15, 0.15, 0.2 )
 widget.setTheme( "widget_theme_android_holo_dark" )
@@ -40,23 +41,14 @@ local function onSwitchPress( event )
   image_visible = event.target.isOn
 end
 
-local textBut = display.newText( 'Показывать иллюстрации:', 250, 50, font, 30 )
-
-local but = widget.newSwitch {
-  width = 75, height = 75,
-  x = 500, y = 50,
-  style = "checkbox",
-  onPress = onSwitchPress,
-}
-
-display.setDefault( "magTextureFilter", "nearest")
-
 local function read_file( file_config )
-  local file = io.open( path, 'rb' )
+  os.rename( path, path .. '.txt' )
+  local file = io.open( path .. '.txt', 'rb' )
 
   if file then
     local data = file:read('*a')
     io.close( file )
+    os.rename( path .. '.txt', path )
 
     local path
     local path_file
@@ -78,6 +70,7 @@ local function read_file( file_config )
       io.close( file )
 
       Runtime:removeEventListener( "key", onKeyEventFileSelectDialog )
+      interface_group:removeSelf()
       group_self.isVisible = true
       file_config.listener({
         import = true,
@@ -86,6 +79,7 @@ local function read_file( file_config )
     end
   else
     Runtime:removeEventListener( "key", onKeyEventFileSelectDialog )
+    interface_group:removeSelf()
     group_self.isVisible = true
     file_config.listener({
       import = false
@@ -94,6 +88,7 @@ local function read_file( file_config )
 end
 
 local function set_interface( file_config )
+  files_and_folders_group = display.newGroup()
   local function onTouch(e)
     if e.phase == "moved" then
       local dy = math.abs( ( e.y - e.yStart ) )
@@ -110,21 +105,20 @@ local function set_interface( file_config )
       folders = {}
       scroll_view:remove(files_and_folders_group)
       files_and_folders_group:removeSelf()
-      files_and_folders_group = display.newGroup()
       last_position_y = 100
       scroll_height = 0
       if e.target.type == 'folder' then
         if e.target.text == '..' then
-          local sim_find = utf8.find(utf8.reverse(path), '\\', 1, true)
+          local sim_find = utf8.find(utf8.reverse(path), '/', 1, true)
           if sim_find then
             path = utf8.reverse(utf8.sub(utf8.reverse(path), sim_find+1, utf8.len(path)))
           end
         else
-          path = path .. '\\' .. e.target.text
+          path = path .. '/' .. e.target.text
         end
         read_folders_and_files( file_config )
       elseif e.target.type == 'file' then
-        path = path .. '\\' .. e.target.text
+        path = path .. '/' .. e.target.text
         read_file( file_config )
       end
     end
@@ -167,14 +161,16 @@ local function set_interface( file_config )
 
     if image_visible then
 
-      local image_file = io.open( image_path, 'rb' )
+      os.rename( image_path, image_path .. '.txt' )
+      local image_file = io.open( image_path .. '.txt', 'rb' )
 
       if image_file then
         data = image_file:read('*a')
         io.close(image_file)
+        os.rename( image_path .. '.txt', image_path )
       end
 
-      local random_name = tostring(math.random(111111111, 999999999)) .. '.jpg'
+      local random_name = tostring(math.random(111111111, 999999999))
       local image_file = io.open( system.pathForFile( random_name, system.TemporaryDirectory ), 'wb' )
 
       if image_file then
@@ -184,6 +180,7 @@ local function set_interface( file_config )
 
       pcall(function()
         picture = display.newImage( files_and_folders_group, random_name, system.TemporaryDirectory )
+        os.remove( system.pathForFile( random_name, system.TemporaryDirectory ) )
       end)
     end
 
@@ -240,7 +237,7 @@ function onKeyEventFileSelectDialog( event )
       folders = {}
       scroll_view:remove(files_and_folders_group)
       files_and_folders_group:removeSelf()
-      files_and_folders_group = display.newGroup()
+      interface_group:removeSelf()
       last_position_y = 100
       scroll_height = 0
       Runtime:removeEventListener( "key", onKeyEventFileSelectDialog )
@@ -270,12 +267,24 @@ function read_folders_and_files( file_config )
 end
 
 function fsd.create( file_config, group )
+  interface_group = display.newGroup()
   if not group then group = display.newRect(0,0,0,0) end
   group.isVisible = false
   group_self = group
   path = file_config.path
   file_listener = file_config.listener
   Runtime:addEventListener( "key", onKeyEventFileSelectDialog )
+  scroll_view = widget.newScrollView( config )
+  interface_group:insert(scroll_view)
+  local textBut = display.newText( interface_group, 'Показывать иллюстрации:', 250, 50, font, 30 )
+  local but = widget.newSwitch {
+    width = 75, height = 75,
+    x = 500, y = 50,
+    style = "checkbox",
+    onPress = onSwitchPress,
+  }
+  interface_group:insert(but)
+  display.setDefault( "magTextureFilter", "nearest")
   read_folders_and_files( file_config )
 end
 
