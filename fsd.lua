@@ -48,7 +48,6 @@ local function read_file( file_config )
   if file then
     local data = file:read('*a')
     io.close( file )
-    os.rename( path .. '.txt', path )
 
     local path
     local path_file
@@ -85,6 +84,7 @@ local function read_file( file_config )
       import = false
     })
   end
+  os.rename( path .. '.txt', path )
 end
 
 local function set_interface( file_config )
@@ -155,74 +155,76 @@ local function set_interface( file_config )
     last_position_y = last_position_y + 150
   end
   for i = 1, #files do
-    local picture
-    local data
-    local image_path = path .. '/' .. files[i]
+    pcall(function()
+      local picture
+      local data = ''
+      local image_path = path .. '/' .. files[i]
 
-    if image_visible then
+      if image_visible then
+        os.rename( image_path, image_path .. '.txt' )
+        local image_file = io.open( image_path .. '.txt', 'rb' )
 
-      os.rename( image_path, image_path .. '.txt' )
-      local image_file = io.open( image_path .. '.txt', 'rb' )
-
-      if image_file then
-        data = image_file:read('*a')
-        io.close(image_file)
+        if image_file then
+          data = image_file:read('*a')
+          io.close(image_file)
+        end
         os.rename( image_path .. '.txt', image_path )
+
+        local random_name = tostring(math.random(111111111, 999999999))
+        local image_path2 = system.pathForFile( random_name .. '.txt', system.DocumentsDirectory )
+        local image_file2 = io.open( image_path2, 'wb' )
+
+        if image_file2 then
+          image_file2:write(data)
+          io.close(image_file2)
+
+          os.rename( system.pathForFile( random_name .. '.txt', system.DocumentsDirectory ), system.pathForFile( random_name .. '.jpg', system.DocumentsDirectory ) )
+        end
+
+        picture = display.newImage( random_name .. '.jpg', system.DocumentsDirectory, 360, 640 )
       end
 
-      local random_name = tostring(math.random(111111111, 999999999))
-      local image_file = io.open( system.pathForFile( random_name, system.TemporaryDirectory ), 'wb' )
+      if picture then
+        files_and_folders_group:insert( picture )
+        local image_formula = picture.width / 120
+        picture.width = 120
+        picture.height = picture.height / image_formula
 
-      if image_file then
-        image_file:write(data)
-        io.close(image_file)
+        if picture.height > 120 then
+          local image_formula = picture.height / 120
+          picture.height = 120
+          picture.width = picture.width / image_formula
+        end
+      else
+        picture = display.newImage( files_and_folders_group, 'file.png' )
+        picture.width = 80
+        picture.height = 80
       end
 
-      pcall(function()
-        picture = display.newImage( files_and_folders_group, random_name, system.TemporaryDirectory )
-        os.remove( system.pathForFile( random_name, system.TemporaryDirectory ) )
-      end)
-    end
+      picture.x = 80
+      picture.y = last_position_y
 
-    if picture then
-      local image_formula = picture.width / 120
-      picture.width = 120
-      picture.height = picture.height / image_formula
+      local target = display.newRoundedRect( files_and_folders_group, display.contentCenterX, last_position_y, 400, 100, 30 )
+      target.text = files[i]
+      target.type = 'file'
+      target:addEventListener( 'touch', onTouch )
+      target:setFillColor( 0.15, 0.15, 0.2 )
 
-      if picture.height > 120 then
-        local image_formula = picture.height / 120
-        picture.height = 120
-        picture.width = picture.width / image_formula
-      end
-      os.remove( system.pathForFile( random_name, system.TemporaryDirectory ) )
-    else
-      picture = display.newImage( files_and_folders_group, 'file.png' )
-      picture.width = 80
-      picture.height = 80
-    end
+      display.newText({
+        parent = files_and_folders_group,
+        text = files[i],
+        x = display.contentCenterX,
+        y = last_position_y,
+        font = font,
+        fontSize = 45,
+        width = 360,
+        height = 50
+      })
 
-    picture.x = 80
-    picture.y = last_position_y
-
-    local target = display.newRoundedRect( files_and_folders_group, display.contentCenterX, last_position_y, 400, 100, 30 )
-    target.text = files[i]
-    target.type = 'file'
-    target:addEventListener( 'touch', onTouch )
-    target:setFillColor( 0.15, 0.15, 0.2 )
-
-    display.newText({
-      parent = files_and_folders_group,
-      text = files[i],
-      x = display.contentCenterX,
-      y = last_position_y,
-      font = font,
-      fontSize = 45,
-      width = 360,
-      height = 50
-    })
-
-    scroll_height = scroll_height + 100 + 50
-    last_position_y = last_position_y + 150
+      scroll_height = scroll_height + 100 + 50
+      last_position_y = last_position_y + 150
+      os.remove( system.pathForFile( random_name .. '.jpg', system.DocumentsDirectory ) )
+    end)
   end
   scroll_height = scroll_height + 50
   scroll_view:insert(files_and_folders_group)
