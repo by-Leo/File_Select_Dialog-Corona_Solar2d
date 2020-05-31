@@ -42,9 +42,9 @@ local config = {
   new_file = 'Image',
   new_type = '.png',
   path = 'C:\\Users', -- /sdcard (for Android)
-  listener = function( e )
+  listener = function(e)
     if e.import then
-      native.showAlert( 'File Select Dialog', 'File successfully imported', {'Close'} )
+      native.showAlert('File Select Dialog', 'File successfully imported', {'Close'})
       print(e.path) -- New path to the imported file
     else
       native.showAlert('File Select Dialog', 'Failed to import file! \nCheck if storage access is granted for the application', {'Close'})
