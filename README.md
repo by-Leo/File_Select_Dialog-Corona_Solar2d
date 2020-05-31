@@ -12,7 +12,7 @@ local fsd = require 'fsd'
 fsd.create(config, group)
 ```
 
-# Config options (Table)
+## Config options (Table)
 -  type - Formats to be selected by the user (Table)<br>
 -  new_folder - The folder into which the file will be imported (String)<br>
 -  new_file - New name of the imported file (String)<br>
